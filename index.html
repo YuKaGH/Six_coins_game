@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Six coins game. Martin Gardner Glasses Game Extansion.   Yu Ka 02.11.2025</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #87CEEB, #4682B4);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            touch-action: manipulation;
+        }
+        
+        .container {
+            max-width: 100%;
+            width: 100%;
+            text-align: center;
+            padding: 10px;
+        }
+        
+        h1 {
+            margin: 10px 0;
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .game-info {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .game-board {
+            position: relative;
+            width: min(90vw, 400px);
+            height: min(90vw, 400px);
+            margin: 0 auto 20px;
+        }
+        
+        .table {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 30% 30%, rgba(0, 100, 0, 0.9) 0%, rgba(0, 80, 0, 0.8) 50%, rgba(0, 60, 0, 0.7) 100%),
+                linear-gradient(135deg, #006400 0%, #008000 25%, #00A000 50%, #008000 75%, #006400 100%);
+            background-blend-mode: overlay;
+            border-radius: 50%;
+            border: 12px solid #8B4513;
+            box-shadow: 
+                0 8px 25px rgba(0, 0, 0, 0.6),
+                inset 0 0 40px rgba(0, 0, 0, 0.3),
+                inset 0 0 60px rgba(0, 100, 0, 0.4);
+            overflow: hidden;
+        }
+
+        .table::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(50, 205, 50, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(144, 238, 144, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 40% 70%, rgba(0, 255, 0, 0.1) 0%, transparent 50%);
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .table::after {
+            content: '';
+            position: absolute;
+            top: 5%;
+            left: 5%;
+            right: 5%;
+            bottom: 5%;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        
+        .hexagon-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70%;
+            height: 70%;
+            transition: transform 1s linear;
+        }
+        
+        .coin-container {
+            position: absolute;
+            width: min(14vw, 65px);
+            height: min(14vw, 65px);
+            transform: translate(-50%, -50%);
+        }
+        
+        .coin {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.4s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            border: 3px solid #FFD700;
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .coin.face {
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%23FFD700"/><circle cx="50" cy="50" r="40" fill="%23FFEC8B"/><circle cx="50" cy="50" r="35" fill="%23FFD700"/><text x="50" y="55" text-anchor="middle" font-size="24" fill="%238B4513">★</text><circle cx="50" cy="50" r="30" fill="none" stroke="%238B4513" stroke-width="2"/></svg>');
+        }
+        
+        .coin.back {
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%23C0C0C0"/><circle cx="50" cy="50" r="40" fill="%23E8E8E8"/><circle cx="50" cy="50" r="35" fill="%23C0C0C0"/><text x="50" y="55" text-anchor="middle" font-size="20" fill="%23606060">1</text><circle cx="50" cy="50" r="30" fill="none" stroke="%23606060" stroke-width="2"/></svg>');
+        }
+        
+        .coin.flipping {
+            animation: flip 0.4s ease;
+        }
+        
+        @keyframes flip {
+            0% { transform: rotateY(0deg); }
+            50% { transform: rotateY(90deg); }
+            100% { transform: rotateY(0deg); }
+        }
+        
+        .napkin {
+            position: absolute;
+            width: min(18vw, 80px);
+            height: min(18vw, 80px);
+            background-color: #FFA500;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: transparent;
+            font-weight: bold;
+            box-shadow: 
+                0 4px 12px rgba(0, 0, 0, 0.4),
+                inset 0 2px 6px rgba(255, 255, 255, 0.4);
+            transition: all 0.3s;
+            z-index: 2;
+            touch-action: manipulation;
+            transform: translate(-50%, -50%);
+            border: 3px solid rgba(255, 255, 255, 0.6);
+        }
+        
+        .napkin::before {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            right: 5px;
+            bottom: 5px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 6px;
+            pointer-events: none;
+        }
+        
+        .napkin:hover, .napkin:active {
+            transform: translate(-50%, -50%) scale(1.05);
+            background-color: #FF8C00;
+            box-shadow: 
+                0 6px 15px rgba(0, 0, 0, 0.5),
+                inset 0 2px 6px rgba(255, 255, 255, 0.5);
+        }
+        
+        .napkin.selected {
+            background-color: #FF6347;
+            transform: translate(-50%, -50%) scale(1.1);
+            box-shadow: 
+                0 8px 18px rgba(0, 0, 0, 0.6),
+                inset 0 2px 6px rgba(255, 255, 255, 0.6);
+        }
+        
+        .napkin.removed {
+            opacity: 0;
+            pointer-events: none;
+            transform: translate(-50%, -50%) scale(0);
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 12px 20px;
+            font-size: 1rem;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            min-width: 120px;
+            touch-action: manipulation;
+        }
+        
+        button:hover, button:active {
+            background-color: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        #next-btn {
+            background-color: #2196F3;
+        }
+        
+        #next-btn:hover, #next-btn:active {
+            background-color: #0b7dda;
+        }
+        
+        .message {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+            padding: 20px;
+        }
+        
+        .message.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .message-content {
+            background: linear-gradient(135deg, #1a2a6c, #2196F3);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: min(90vw, 500px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        }
+        
+        .message h2 {
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            margin-bottom: 15px;
+        }
+        
+        .message p {
+            font-size: clamp(1rem, 4vw, 1.2rem);
+            margin-bottom: 20px;
+        }
+        
+        .instructions {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            text-align: left;
+            font-size: clamp(0.9rem, 3vw, 1rem);
+        }
+        
+        .instructions h3 {
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .instructions ul {
+            list-style-type: none;
+            padding-left: 10px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .instructions li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #FFA500;
+            font-weight: bold;
+        }
+        
+        .round-counter {
+            font-size: clamp(1.1rem, 4vw, 1.3rem);
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        
+        .status {
+            font-size: clamp(1rem, 3.5vw, 1.1rem);
+            margin: 8px 0;
+            min-height: 20px;
+        }
+        
+        @media (max-width: 480px) {
+            .game-board {
+                width: min(95vw, 350px);
+                height: min(95vw, 350px);
+            }
+            
+            button {
+                padding: 10px 15px;
+                min-width: 100px;
+                font-size: 0.9rem;
+            }
+            
+            .controls {
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Вращающаяся головоломка</h1>
+        
+        <div class="game-info">
+            <div class="round-counter">Раунд: <span id="round-count">1</span></div>
+            <div class="status" id="game-status">Выберите 3 салфетки</div>
+        </div>
+        
+        <div class="game-board">
+            <div class="table" id="table">
+                <div class="hexagon-container" id="hexagon-container">
+                    <!-- Монеты и салфетки будут добавлены сюда -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="reset-btn">Новая игра</button>
+            <button id="next-btn" disabled>Дальше</button>
+            <button id="exit-btn">Выход</button>
+        </div>
+        
+        <div class="instructions">
+            <h3>Как играть:</h3>
+            <ul>
+                <li>Выберите 3 салфетки, чтобы увидеть монеты под ними</li>
+                <li>Кликайте по видимым монетам, чтобы перевернуть их</li>
+                <li>Нажмите "Дальше", чтобы вращать шестиугольник</li>
+                <li>После вращения все салфетки закрывают монеты</li>
+                <li>Цель: сделать все 6 монет одной стороной вверх</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="message" id="win-message">
+        <div class="message-content">
+            <h2>Поздравляем!</h2>
+            <p>Вы выиграли! Все монеты стали одной стороной вверх.</p>
+            <p>Количество раундов: <span id="final-rounds">1</span></p>
+            <button id="play-again-btn">Играть снова</button>
+        </div>
+    </div>
+    
+    <div class="message" id="exit-message">
+        <div class="message-content">
+            <h2>Выход из игры</h2>
+            <p>Вы завершили игру. Спасибо за участие!</p>
+            <p>Количество сыгранных раундов: <span id="exit-rounds">1</span></p>
+            <button id="restart-btn">Начать заново</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Элементы DOM
+            const hexagonContainer = document.getElementById('hexagon-container');
+            const roundCount = document.getElementById('round-count');
+            const gameStatus = document.getElementById('game-status');
+            const finalRounds = document.getElementById('final-rounds');
+            const exitRounds = document.getElementById('exit-rounds');
+            const resetBtn = document.getElementById('reset-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const exitBtn = document.getElementById('exit-btn');
+            const winMessage = document.getElementById('win-message');
+            const exitMessage = document.getElementById('exit-message');
+            const playAgainBtn = document.getElementById('play-again-btn');
+            const restartBtn = document.getElementById('restart-btn');
+            
+            // Константы игры
+            const COIN_SIDES = {
+                FACE: 'face',
+                BACK: 'back'
+            };
+            
+            const ANGLES = [0, 90, 180, 270];
+            
+            // Состояние игры
+            let gameState = {
+                coins: [],
+                napkins: [],
+                selectedNapkins: [],
+                currentRound: 1,
+                isRotating: false,
+                gameActive: true,
+                napkinsRemoved: false
+            };
+            
+            // Инициализация игры
+            function initGame() {
+                gameState.currentRound = 1;
+                gameState.selectedNapkins = [];
+                gameState.napkinsRemoved = false;
+                roundCount.textContent = gameState.currentRound;
+                gameStatus.textContent = 'Выберите 3 салфетки';
+                nextBtn.disabled = true;
+                
+                // Очистка игрового поля
+                hexagonContainer.innerHTML = '';
+                hexagonContainer.style.transform = 'translate(-50%, -50%) rotate(0deg)';
+                
+                // Создание монет и салфеток
+                createCoinsAndNapkins();
+                
+                // Скрытие сообщений
+                winMessage.classList.remove('show');
+                exitMessage.classList.remove('show');
+                
+                gameState.gameActive = true;
+                gameState.isRotating = false;
+            }
+            
+            // Создание монет и салфеток
+            function createCoinsAndNapkins() {
+                gameState.coins = [];
+                gameState.napkins = [];
+                const radius = 40; // Процент от размера контейнера шестиугольника
+                
+                for (let i = 0; i < 6; i++) {
+                    const angle = (i * 60) * Math.PI / 180;
+                    const x = radius * Math.cos(angle);
+                    const y = radius * Math.sin(angle);
+                    
+                    // Создание контейнера для монеты
+                    const coinContainer = document.createElement('div');
+                    coinContainer.className = 'coin-container';
+                    coinContainer.style.left = `calc(50% + ${x}%)`;
+                    coinContainer.style.top = `calc(50% + ${y}%)`;
+                    
+                    // Создание монеты
+                    const coin = document.createElement('div');
+                    coin.className = 'coin';
+                    // Случайная сторона
+                    const randomSide = Math.random() > 0.5 ? COIN_SIDES.FACE : COIN_SIDES.BACK;
+                    coin.classList.add(randomSide);
+                    coin.dataset.index = i;
+                    
+                    coin.addEventListener('click', handleCoinClick);
+                    coin.addEventListener('touchstart', handleCoinClick, { passive: true });
+                    
+                    coinContainer.appendChild(coin);
+                    hexagonContainer.appendChild(coinContainer);
+                    
+                    // Создание салфетки
+                    const napkin = document.createElement('div');
+                    napkin.className = 'napkin';
+                    // Убрали номера - текст прозрачный
+                    napkin.textContent = '';
+                    napkin.style.left = `calc(50% + ${x}%)`;
+                    napkin.style.top = `calc(50% + ${y}%)`;
+                    napkin.dataset.index = i;
+                    
+                    napkin.addEventListener('click', handleNapkinClick);
+                    napkin.addEventListener('touchstart', handleNapkinClick, { passive: true });
+                    
+                    hexagonContainer.appendChild(napkin);
+                    
+                    // Сохранение состояния
+                    gameState.coins.push({
+                        element: coin,
+                        side: randomSide,
+                        index: i,
+                        isVisible: false
+                    });
+                    
+                    gameState.napkins.push({
+                        element: napkin,
+                        index: i,
+                        isSelected: false,
+                        isRemoved: false
+                    });
+                }
+            }
+            
+            // Обработчик клика по салфетке
+            function handleNapkinClick(e) {
+                if (gameState.isRotating || !gameState.gameActive || gameState.napkinsRemoved) return;
+                
+                const napkinIndex = parseInt(e.target.dataset.index);
+                const napkin = gameState.napkins[napkinIndex];
+                const coin = gameState.coins[napkinIndex];
+                
+                if (napkin.isSelected) {
+                    // Вернуть салфетку
+                    napkin.isSelected = false;
+                    napkin.element.classList.remove('selected');
+                    gameState.selectedNapkins = gameState.selectedNapkins.filter(idx => idx !== napkinIndex);
+                    
+                    // Скрыть монету
+                    coin.isVisible = false;
+                } else {
+                    // Выбрать салфетку, если меньше 3 выбрано
+                    if (gameState.selectedNapkins.length < 3) {
+                        napkin.isSelected = true;
+                        napkin.element.classList.add('selected');
+                        gameState.selectedNapkins.push(napkinIndex);
+                        
+                        // Показать монету
+                        coin.isVisible = true;
+                        
+                        // Если выбрано 3 салфетки - убрать их
+                        if (gameState.selectedNapkins.length === 3) {
+                            setTimeout(() => {
+                                gameState.selectedNapkins.forEach(idx => {
+                                    gameState.napkins[idx].element.classList.add('removed');
+                                });
+                                gameState.napkinsRemoved = true;
+                                gameStatus.textContent = 'Теперь вы можете переворачивать видимые монеты. Нажмите "Дальше", когда готовы.';
+                                nextBtn.disabled = false;
+                            }, 300);
+                        }
+                    }
+                }
+                
+                // Обновить статус
+                updateGameStatus();
+            }
+            
+            // Обработчик клика по монете
+            function handleCoinClick(e) {
+                if (gameState.isRotating || !gameState.gameActive || !gameState.napkinsRemoved) return;
+                
+                const coinIndex = parseInt(e.target.dataset.index);
+                const coin = gameState.coins[coinIndex];
+                
+                // Проверить, открыта ли монета (снята ли салфетка)
+                if (!coin.isVisible) return;
+                
+                // Перевернуть монету с анимацией
+                coin.element.classList.add('flipping');
+                
+                setTimeout(() => {
+                    // Инвертировать сторону
+                    if (coin.element.classList.contains(COIN_SIDES.FACE)) {
+                        coin.element.classList.remove(COIN_SIDES.FACE);
+                        coin.element.classList.add(COIN_SIDES.BACK);
+                        coin.side = COIN_SIDES.BACK;
+                    } else {
+                        coin.element.classList.remove(COIN_SIDES.BACK);
+                        coin.element.classList.add(COIN_SIDES.FACE);
+                        coin.side = COIN_SIDES.FACE;
+                    }
+                    
+                    coin.element.classList.remove('flipping');
+                    
+                    gameStatus.textContent = 'Монета перевернута. Вы можете продолжить или нажать "Дальше".';
+                }, 200);
+            }
+            
+            // Обновление статуса игры
+            function updateGameStatus() {
+                const selectedCount = gameState.selectedNapkins.length;
+                
+                if (selectedCount < 3) {
+                    gameStatus.textContent = `Выберите ${3 - selectedCount} еще салфетки`;
+                    nextBtn.disabled = true;
+                }
+            }
+            
+            // Вращение шестиугольника
+            function rotateHexagon() {
+                if (gameState.isRotating) return;
+                
+                gameState.isRotating = true;
+                nextBtn.disabled = true;
+                gameStatus.textContent = 'Шестиугольник вращается...';
+                
+                // Сначала мгновенно закрываем все салфетки
+                gameState.napkins.forEach(napkin => {
+                    napkin.isSelected = false;
+                    napkin.isRemoved = false;
+                    napkin.element.classList.remove('selected', 'removed');
+                });
+                
+                // Скрываем все монеты
+                gameState.coins.forEach(coin => {
+                    coin.isVisible = false;
+                });
+                
+                gameState.selectedNapkins = [];
+                gameState.napkinsRemoved = false;
+                
+                // Случайный угол из доступных
+                const randomAngle = ANGLES[Math.floor(Math.random() * ANGLES.length)];
+                
+                // Сбрасываем вращение перед началом новой анимации
+                hexagonContainer.style.transition = 'none';
+                hexagonContainer.style.transform = 'translate(-50%, -50%) rotate(0deg)';
+                
+                // Принудительное обновление DOM
+                void hexagonContainer.offsetWidth;
+                
+                // Включаем анимацию и вращаем
+                hexagonContainer.style.transition = 'transform 1s linear';
+                
+                // 10 ОБОРОТОВ ЗА 1 СЕКУНДУ! (3600°) + случайный угол
+                const totalRotation = 3600 + randomAngle;
+                hexagonContainer.style.transform = `translate(-50%, -50%) rotate(${totalRotation}deg)`;
+                
+                // После завершения вращения
+                setTimeout(() => {
+                    // Сбрасываем вращение до конечного угла без анимации
+                    hexagonContainer.style.transition = 'none';
+                    hexagonContainer.style.transform = `translate(-50%, -50%) rotate(${randomAngle}deg)`;
+                    
+                    // Проверить условие победы
+                    if (checkWinCondition()) {
+                        showWinMessage();
+                    } else {
+                        // Перейти к следующему раунду
+                        gameState.currentRound++;
+                        roundCount.textContent = gameState.currentRound;
+                        gameState.isRotating = false;
+                        gameStatus.textContent = 'Выберите 3 салфетки';
+                    }
+                }, 1000); // СУПЕР-БЫСТРОЕ ВРАЩЕНИЕ - 1 СЕКУНДА для 10 оборотов!
+            }
+            
+            // Проверка условия победы
+            function checkWinCondition() {
+                const firstSide = gameState.coins[0].side;
+                return gameState.coins.every(coin => coin.side === firstSide);
+            }
+            
+            // Показать сообщение о победе
+            function showWinMessage() {
+                gameState.gameActive = false;
+                finalRounds.textContent = gameState.currentRound;
+                setTimeout(() => {
+                    winMessage.classList.add('show');
+                }, 500);
+            }
+            
+            // Показать сообщение о выходе
+            function showExitMessage() {
+                gameState.gameActive = false;
+                exitRounds.textContent = gameState.currentRound;
+                exitMessage.classList.add('show');
+            }
+            
+            // Обработчики кнопок
+            resetBtn.addEventListener('click', initGame);
+            resetBtn.addEventListener('touchstart', initGame, { passive: true });
+            
+            nextBtn.addEventListener('click', function() {
+                if (gameState.selectedNapkins.length === 3 && !gameState.isRotating) {
+                    rotateHexagon();
+                }
+            });
+            nextBtn.addEventListener('touchstart', function() {
+                if (gameState.selectedNapkins.length === 3 && !gameState.isRotating) {
+                    rotateHexagon();
+                }
+            }, { passive: true });
+            
+            exitBtn.addEventListener('click', showExitMessage);
+            exitBtn.addEventListener('touchstart', showExitMessage, { passive: true });
+            
+            playAgainBtn.addEventListener('click', initGame);
+            playAgainBtn.addEventListener('touchstart', initGame, { passive: true });
+            
+            restartBtn.addEventListener('click', initGame);
+            restartBtn.addEventListener('touchstart', initGame, { passive: true });
+            
+            // Начать игру
+            initGame();
+        });
+    </script>
+</body>
+</html>
